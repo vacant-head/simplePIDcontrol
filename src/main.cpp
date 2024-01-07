@@ -35,9 +35,9 @@ double pre_err =0;
 double p_calc;
 double i_calc = 0;
 double d_calc;
-double gain_p_deg;
-double gain_i_deg;
-double gain_d_deg;
+double gain_p_deg=0.0913;
+double gain_i_deg=0.04;
+double gain_d_deg=0.00347;
 
 const int pot_pin_p = 32;
 const int pot_pin_i = 33;
@@ -106,42 +106,32 @@ void loop()
   // Serial.printf("%lfdeg\n\r", nowangle_deg);//現在の角度を表示
   precount = count;
 
-  pot_p = analogRead(pot_pin_p) * pot_calc;
-  pot_i = analogRead(pot_pin_i) * pot_calc;
-  pot_d = analogRead(pot_pin_d) * pot_calc;
+  // pot_p = analogRead(pot_pin_p) * pot_calc;
+  // pot_i = analogRead(pot_pin_i) * pot_calc;
+  // pot_d = analogRead(pot_pin_d) * pot_calc;
 
-  // Serial.printf("%lf,%lf,%lf\n\r",pot_p,pot_i,pot_d);
+  // // Serial.printf("%lf,%lf,%lf\n\r",pot_p,pot_i,pot_d);
 
-  gain_p_deg = 1.0 * (0.1 * pot_p + 0.091);
-  gain_i_deg = 1.0 * (0.2 * pot_i + 0.0);//4.196
-  gain_d_deg = 1.0 * (0.001 * pot_d + 0.003);//0.000001
+  // gain_p_deg = 1.0 * (0.1 * pot_p + 0.0);//0.091
+  // gain_i_deg = 1.0 * (0.2 * pot_i + 0.0);//0
+  // gain_d_deg = 1.0 * (0.01 * pot_d + 0.0);//0.0003
 
-  Serial.printf("%f,%f,%f,", gain_p_deg, gain_i_deg, gain_d_deg);
+  // Serial.printf("%f,%f,%f,", gain_p_deg, gain_i_deg, gain_d_deg);
 
   // PID
   // 目標値生成
-  // if(count_period>=500)//
-  // {
-  //   //deg_ref =deg_ref*-1.0;
-  //   deg_ref = 0.0;
-  //   count_period = 0;
-  // }
-
-  //Serial.printf("<graphmax:%f\n",120.0);Serial.printf("<graphmin:%f\n",-120.0);
-
-  //deg_ref = deg_ref/500*(double)count_period;
-  if(count_period <=250)
+  if(count_period <=100)
   {
-    //deg_ref==0;
-    deg_ref =180.0/250*(double)count_period;
+    deg_ref=90.0;
+    //deg_ref =180.0/250*(double)count_period;
   //sin(((double)count_period)/500*M_PI*0.5)*90;
   }
   else
   {
-    //deg_ref=0;
-    deg_ref = 180.0-180.0/250*((double)count_period-250);
+    deg_ref=-90.0;
+    //deg_ref = 180.0-180.0/250*((double)count_period-250);
     //sin(((double)count_period)/500*M_PI*0.5)*90;
-    if(count_period==500)
+    if(count_period==200)
     {count_period=0;}
   }
 
