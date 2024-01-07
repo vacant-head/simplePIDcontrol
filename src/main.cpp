@@ -26,11 +26,15 @@ const int dirPin1_1 = 18;
 const int dirPin1_2 = 19;
 const int channel_motor1 = 1;
 int motor1[5] = {pwmPin1, dirPin1_1, dirPin1_2, channel_motor1, -1};
-double duty = 0;
+double dutyout = 0;
 
 double deg_ref = 90.0;
 double vel_ref;
 double err;
+double pre_err =0;
+double p_calc;
+double i_calc = 0;
+double d_calc;
 double gain_p_deg;
 double gain_i_deg;
 double gain_d_deg;
@@ -108,11 +112,11 @@ void loop()
 
   // Serial.printf("%lf,%lf,%lf\n\r",pot_p,pot_i,pot_d);
 
-  gain_p_deg = 1.0 * (0.1 * pot_p + 0.0);
-  gain_i_deg = 1.0 * (1 * pot_i + 0.0);//4.196
-  gain_d_deg = 1.0 * (0.0001 * pot_d + 0.00000);//0.000001
+  gain_p_deg = 1.0 * (0.1 * pot_p + 0.091);
+  gain_i_deg = 1.0 * (0.2 * pot_i + 0.0);//4.196
+  gain_d_deg = 1.0 * (0.001 * pot_d + 0.003);//0.000001
 
-  //Serial.printf("%f,%f,%f,", gain_p_deg, gain_i_deg, gain_d_deg*100);
+  Serial.printf("%f,%f,%f,", gain_p_deg, gain_i_deg, gain_d_deg);
 
   // PID
   // 目標値生成
@@ -123,28 +127,36 @@ void loop()
   //   count_period = 0;
   // }
 
-  Serial.printf("<graphmax:%f\n",120.0);Serial.printf("<graphmin:%f\n",-120.0);
+  //Serial.printf("<graphmax:%f\n",120.0);Serial.printf("<graphmin:%f\n",-120.0);
 
-  deg_ref = deg_ref/500*(double)count_period;
-  if(count_period <=500)
-  {//deg_ref =90.0/500*(double)count_period;
-  sin(((double)count_period)/500*M_PI*0.5)*90;}
+  //deg_ref = deg_ref/500*(double)count_period;
+  if(count_period <=250)
+  {
+    //deg_ref==0;
+    deg_ref =180.0/250*(double)count_period;
+  //sin(((double)count_period)/500*M_PI*0.5)*90;
+  }
   else
   {
-    //deg_ref = 90.0-90.0/500*((double)count_period-500);
-    sin(((double)count_period)/500*M_PI*0.5)*90;
-    if(count_period==1000)
+    //deg_ref=0;
+    deg_ref = 180.0-180.0/250*((double)count_period-250);
+    //sin(((double)count_period)/500*M_PI*0.5)*90;
+    if(count_period==500)
     {count_period=0;}
   }
 
   err = (deg_ref - nowangle_deg); // 偏差
-  //Serial.printf("%lf,\n\r", err);  // 偏差を出力
-  Serial.printf("<target:%f\n", deg_ref); 
-  Serial.printf("<err:%f\n", nowangle_deg);
+  Serial.printf("%lf,\n\r", err);  // 偏差を出力
+  //Serial.printf("<target:%f\n", deg_ref); 
+  //Serial.printf("<err:%f\n\r", nowangle_deg);
   //dutyの計算
-  duty = gain_p_deg * err + gain_i_deg * err * control_period * 0.000001 + gain_d_deg * err / (control_period * 0.000001);
-  motorDrive(motor1, duty);
-
+  p_calc = err;
+  i_calc = i_calc+((err+pre_err)*control_period*1.0e-6)/2.0;
+  d_calc = (err-pre_err)/(control_period*1.0e-6);
+  pre_err = err;
+  dutyout = gain_p_deg * p_calc + gain_i_deg * i_calc + gain_d_deg * d_calc;
+  motorDrive(motor1, dutyout);
+  
   // 制御周期安定化
   interval = micros() - preinterval;
   while (interval < control_period)
